@@ -3,6 +3,7 @@ import * as React from "react"
 import Header from "./components/Header/Header.jsx"
 import Instructions from "./components/Instructions/Instructions.jsx"
 import Chip from "./components/Chip/Chip.jsx"
+import NutritionalLabel from "./components/NutritionalLabel/NutritionalLabel"
 import {useState} from "react"
 import { createDataSet } from "./data/dataset"
 import "./App.css"
@@ -25,21 +26,21 @@ export const appInfo = {
 const { data, categories, restaurants } = createDataSet()
 
 export function App() {
-  const [status, setStatus] = useState("");
-  const [resturantStatus, setresturantStatus] = useState("");
-  const currentMenuItems = data.filter(element => {
-    return element.restaurant === status && element.food_category === resturantStatus;
+  const [selectedCategory, choseCategory] = useState(null)
+  const [selectedRestaurant, choseRestaurant] = useState(null)
+  const [selectedMenuItem, choseMenuItem] = useState(null)
+  var currentMenuItems = data.filter((item) => {
+    return item.food_category === selectedCategory && item.restaurant === selectedRestaurant
   })
-  console.log("filter", currentMenuItems);
   return (
     <main className="App">
       {/* CATEGORIES COLUMN */}
       <div className="CategoriesColumn col">
         <div className="categories options">
           <h2 className="title">Categories</h2>
-          {categories.map((category) => {
+          {categories.map((element) => {
             return(
-            <Chip label={category} key={category.toString()} clickEvent={() => setStatus(category)} isActive={(category === status) ? true : false}></Chip>
+              <Chip key={element.toString()} label={element} clickEvent={() => choseCategory(element)} isActive={element === selectedCategory}></Chip>
             )
           })}
         </div>
@@ -47,31 +48,45 @@ export function App() {
 
       {/* MAIN COLUMN */}
       <div className="container">
-        {<Header title={appInfo.title} tagline={appInfo.tagline} description={appInfo.description}/>}
+        {<Header title={appInfo.title} tagline={appInfo.tagline} description={appInfo.description}></Header>}
 
         {/* RESTAURANTS ROW */}
         <div className="RestaurantsRow">
           <h2 className="title">Restaurants</h2>
-          <div className="restaurants options">
-            {restaurants.map((restaurant) =>{
+          <div className="restaurants options">{
+            restaurants.map((element) => {
               return(
-              <Chip label={restaurant} key={restaurant.toString()} clickEvent={() => setresturantStatus(restaurant)} isActive={(restaurant === resturantStatus) ? true : false}></Chip>
+                <Chip key={element.toString()} label={element} clickEvent={() => choseRestaurant(element)} isActive={element === selectedRestaurant}></Chip>
               )
-            })}
-            </div>
+            })
+          }</div>
         </div>
 
-        {<Instructions instructions={appInfo.instructions.start}/>}
+        {<Instructions instructions={
+          selectedMenuItem != null && selectedRestaurant != null && selectedCategory != null ?
+          appInfo.instructions.allSelected 
+          : selectedRestaurant != null && selectedCategory != null && selectedMenuItem === null?
+          appInfo.instructions.noSelectedItem
+          : selectedCategory != null && selectedRestaurant === null ?
+          appInfo.instructions.onlyCategory
+          : selectedCategory === null && selectedRestaurant != null ?
+          appInfo.instructions.onlyRestaurant
+          : appInfo.instructions.start
+          }></Instructions>}
 
         {/* MENU DISPLAY */}
         <div className="MenuDisplay display">
           <div className="MenuItemButtons menu-items">
             <h2 className="title">Menu Items</h2>
-            {/* YOUR CODE HERE */}
+            {currentMenuItems.map((element) => {
+              return (
+                <Chip key={element.item_name.toString()} label={element.item_name} clickEvent={() => choseMenuItem(element)}  isActive={selectedMenuItem?.item_name === element.item_name}></Chip>
+              )
+            })}
           </div>
 
           {/* NUTRITION FACTS */}
-          <div className="NutritionFacts nutrition-facts">{/* YOUR CODE HERE */}</div>
+          <div className="NutritionFacts nutrition-facts">{selectedMenuItem ? <NutritionalLabel item={selectedMenuItem}/> : null}</div>
         </div>
 
         <div className="data-sources">
